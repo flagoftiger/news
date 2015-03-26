@@ -1,0 +1,63 @@
+Company name	2009 Announce	foreign
+GM	6/1/2009	
+GM	8/4/2009	
+GM	2/11/2009	
+GM	4/17/2009	
+GM	2/18/2009	y
+GM	6/24/2009	
+GM	1/27/2009	¡¦
+GM	3/27/2009	
+GM	4/28/2009	
+Morgan Stanley	2/2/2009	
+Macy's	2/3/2009	
+Chrysler	2/4/2009	
+Johnson & Johnson	11/4/2009	
+Cigna	1/5/2009	
+AT&T	4/6/2009	
+Ford	2/6/2009	y
+Ford	1/30/2009	
+United Technologies	3/11/2009	
+Alcoa	1/7/2009	
+Chevron	1/8/2009	
+3M	4/9/2009	
+Boeing	1/9/2009	
+Boeing	1/29/2009	
+Dell	1/9/2009	
+Dell	12/17/2009	y
+Valero	9/9/2009	
+Fedex	2/10/2009	
+Fedex	3/20/2009	
+Merck	11/10/2009	
+Sprint Nextel	11/10/2009	
+Sprint Nextel	1/27/2009	
+Carterpillar	1/27/2009	
+Walmart	2/14/2009	
+Pfizer	1/14/2009	
+Pfizer	1/17/2009	
+Sunuco	3/14/2009	
+Motorola	1/15/2009	
+Lockheed Martin	8/18/2009	
+Wellpoint	1/19/2009	
+Exelon	6/19/2009	
+AMEX	5/19/2009	
+Hewlett-Packard	5/20/2009	
+Time Warner (AOL)	11/20/2009	
+Bank of America	1/21/2009	
+Time Warner (Warner Brothers)	1/21/2009	
+Sun Microsystems	10/21/2009	
+Dupont	9/21/2009	
+Intel	1/22/2009	
+Microsoft	1/23/2009	
+Walt Disney	1/23/2009	
+Time Warner (Time)	10/23/2009	
+Cisco	2/26/2009	
+Visteon	2/26/2009	
+Home Depot	1/27/2009	
+IBM	1/27/2009	
+Target	1/28/2009	
+Best Buy	1/28/2009	
+Verizon	1/28/2009	
+Kodak	1/29/2009	
+Qwest	4/30/2009	
+Walt Disney (ABC)	1/30/2009	
+Sears	1/31/2009	
