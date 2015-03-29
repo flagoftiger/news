@@ -78,7 +78,7 @@ class NYTParser(HTMLParser):
 url = 'http://api.nytimes.com/svc/search/v2/articlesearch.json?q=%(q)s&begin_date=%(bd)s&end_date=%(ed)s&sort=newest&page=%(p)s&api-key=%(ak)s'
 apiKey = '96e7d7c2bc5ea0ba08e7ac33015d03ba:1:71635418'
 newsProvider = "NYT"
-cookieFileName = "nyt_cookie"
+cookieFileName = "./nyt_cookie"
 
 def GetCookie():
 	if os.path.isfile(cookieFileName):
@@ -90,6 +90,8 @@ def GetCookie():
 	c.setopt(c.URL, 'http://www.nytimes.com/')
 	c.setopt(c.WRITEHEADER, header)
 	c.setopt(c.WRITEDATA, data)
+	c.setopt(c.COOKIEJAR, cookieFileName)
+	c.setopt(c.COOKIEFILE, cookieFileName)
 	try:
 		c.perform()
 	except:
@@ -102,22 +104,12 @@ def GetCookie():
 		if lines[1] != '200':
 			log.error("HTTP ERROR %s" % lines[1])
 			return False
-		else:
-			# Find 'Set-Cookie:' in header, the next string should be cookie
-			cookieIndex = lines.index('Set-Cookie:')
-			# The cookie string might contain path information fllowing ';'
-			# Get rid of the path information
-			cookie = lines[cookieIndex + 1].split(';')[0]			
 	else:
 		log.error("HTTP ERROR")
 		return False
 	header.close()
 	data.close()
-	# Save cookie to file
-	f = open(cookieFileName, 'wb')
-	f.write(cookie)
-	f.close()
-	log.debug("Succeeded to get cookie")
+	log.debug("Succeeded to get the cookie")
 	return True
 
 def Search(keyWord, beginDate, period, page):
@@ -180,6 +172,8 @@ def WriteArticleBody(eventId, url, date):
 	c.setopt(c.COOKIEFILE, cookieFileName)
 	c.setopt(c.WRITEHEADER, header)
 	c.setopt(c.WRITEDATA, data)
+	c.setopt(c.COOKIEJAR, cookieFileName)
+	c.setopt(c.COOKIEFILE, cookieFileName)
 	try:
 		c.perform()
 	except:
