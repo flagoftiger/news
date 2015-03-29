@@ -90,7 +90,6 @@ def GetCookie():
 	c.setopt(c.URL, 'http://www.nytimes.com/')
 	c.setopt(c.WRITEHEADER, header)
 	c.setopt(c.WRITEDATA, data)
-	c.setopt(c.COOKIEFILE, cookieFileName)
 	try:
 		c.perform()
 	except:
@@ -187,16 +186,20 @@ def WriteArticleBody(eventId, url, date):
 		log.warning("curl error: %d %s retry once" % (eventId, url))
 		c.perform()
 	c.reset()
-	lines = header.getvalue().split()
+	lines = header.getvalue().split('\r\n')
 	# 200 OK
 	if lines.count <= 1:
 		log.error("HTTP ERROR")
 		return
-	if lines[1] != '200':
-		if lines[1] == '404':
-			log.info("HTTP 404 ERROR the link was broken. Just skip this page.")
-		else:
-			log.error("HTTP %s ERROR" % lines[1])
+	try:
+		lines.index('HTTP/1.1 200 OK')
+	except:
+		try:
+			lines.index('HTTP/1.1 404 Not Found')
+			log.info("HTTP 404 ERROR. The link was broken. Just skip this page.")
+		except:
+			log.error("HTTP ERROR")
+			print header.getvalue()
 		return
 
 	# parsing data and get the body paragraph
