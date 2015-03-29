@@ -1,8 +1,8 @@
 
+import log
 import argparse
 import nyt
 import re
-
 
 def GetSearchData(fileName):
 	searchData = []
@@ -24,6 +24,7 @@ def GetSearchData(fileName):
 		eventId = eventId +1
 	return searchData
 
+# Argument parsing
 parser = argparse.ArgumentParser(description='Collect news articles using the keyword from the given data file')
 parser.add_argument('-file', 
 	type=str,
@@ -31,10 +32,11 @@ parser.add_argument('-file',
 	help='The data file providing event id, keyword and time period. This file shoud be tab-seperated text file format. The default is \"data.txt\"')
 args = parser.parse_args()
 
-print "- Read data file :", args.file
+log.debug("- Read data file : %s" % args.file)
 # Read data file and build the search data table
 searchData = GetSearchData(args.file)
 
+# Run!
 for event in searchData:
 	nyt.run(event[0], event[1], event[2])	
 

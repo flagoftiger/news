@@ -1,4 +1,3 @@
-import log
 import pycurl
 from StringIO import StringIO
 import datetime
@@ -77,49 +76,69 @@ class NYTParser(HTMLParser):
 #FIXME: need to get entire matching results. currently only get 10 result
 url = 'http://api.nytimes.com/svc/search/v2/articlesearch.json?q=%(q)s&begin_date=%(bd)s&end_date=%(ed)s&sort=newest&page=%(p)s&api-key=%(ak)s'
 apiKey = '96e7d7c2bc5ea0ba08e7ac33015d03ba:1:71635418'
-newsProvider = "NYT"
-cookieFileName = "nyt_cookie"
+newsProvider = "CT"
+cookieFileName = "ct_cookie"
 
 def GetCookie():
-	if os.path.isfile(cookieFileName):
-		log.info("The cookie file already exsists. If the HTTP error occurred, please delete %s file manually" % cookieFileName)
+#	if os.path.isfile(cookieFileName):
+#		return "already cached"
 	cookie = ""
 	header = StringIO()
 	data = StringIO()
 	c = pycurl.Curl()
-	c.setopt(c.URL, 'http://www.nytimes.com/')
+	c.setopt(c.URL, 'https://websso.it.northwestern.edu/amserver/UI/Login')
 	c.setopt(c.WRITEHEADER, header)
 	c.setopt(c.WRITEDATA, data)
+	c.setopt(c.SSL_VERIFYPEER, False)
+	c.setopt(c.SSLVERSION, 1)
+	c.setopt(c.POST, True)
+	c.setopt(c.POSTFIELDS, "IDToken1=sle998&IDToken2=" + urllib.quote('dltnrud!', ''))
+	c.setopt(c.COOKIEJAR, cookieFileName)
+	c.setopt(c.COOKIEFILE, cookieFileName)
+	c.setopt(c.FOLLOWLOCATION, True)
+
+	try:
+		c.perform()
+	except:
+		print "WARNING: curl error"
+
+	print header.getvalue()
+	print data.getvalue()
+	print "!!!!!"
+
+	c.setopt(c.URL, 'http://search.proquest.com.turing.library.northwestern.edu/chicagotribune/advanced?accountid=12861')
+
+	#queryTermField
+	c.setopt(c.COOKIEJAR, cookieFileName)
 	c.setopt(c.COOKIEFILE, cookieFileName)
 	try:
 		c.perform()
 	except:
-		log.error("curl error. Please retry later.")
-		return False
+		print "WARNING: curl error"
 	c.reset()
+	print header.getvalue()
+	print data.getvalue()
+	return
 	lines = header.getvalue().split()
 	# 200 OK
 	if lines.count > 1:
-		if lines[1] != '200':
-			log.error("HTTP ERROR %s" % lines[1])
-			return False
-		else:
+		if lines[1] == '200':
 			# Find 'Set-Cookie:' in header, the next string should be cookie
 			cookieIndex = lines.index('Set-Cookie:')
 			# The cookie string might contain path information fllowing ';'
 			# Get rid of the path information
-			cookie = lines[cookieIndex + 1].split(';')[0]			
+			cookie = lines[cookieIndex + 1].split(';')[0]
+		else:
+			print 'WARNING: HTTP ERROR', lines[1]
 	else:
-		log.error("HTTP ERROR")
-		return False
+		print 'WARNING: HTTP ERROR'
 	header.close()
 	data.close()
 	# Save cookie to file
 	f = open(cookieFileName, 'wb')
 	f.write(cookie)
 	f.close()
-	log.debug("Succeeded to get cookie")
-	return True
+	return cookie
 
 def Search(keyWord, beginDate, period, page):
 	searchResult = []
@@ -137,10 +156,12 @@ def Search(keyWord, beginDate, period, page):
 	c.setopt(c.URL, searchUrl)
 	c.setopt(c.WRITEHEADER, header)
 	c.setopt(c.WRITEDATA, data)
+	c.setopt(c.FOLLOWLOCATION, True)
+
 	try:
 		c.perform()
 	except:
-		log.error("curl error: %s %s %d page=%d" % (keyWord, beginDate, period, page))
+		print "WARNING: curl error:", keyWord, beginDate, period, page
 	c.reset()
 
 	lines = header.getvalue().split()
@@ -150,7 +171,7 @@ def Search(keyWord, beginDate, period, page):
 			try:
 				jsonResult = json.loads(data.getvalue())
 			except:
-				log.warning("json error retry once")
+				print "WARNING: json error retry once"
 				jsonResult = json.loads(data.getvalue())
 			docs = jsonResult[u'response'][u'docs']
 			if len(docs) == 0:
@@ -160,9 +181,9 @@ def Search(keyWord, beginDate, period, page):
 					date = re.search('(\d{4})-(\d{2})-(\d{2})T.{9}', article[u'pub_date'])
 					searchResult.append((article[u'web_url'], date.group(1) + date.group(2) + date.group(3)))
 		else:
-			log.error('HTTP ERROR %s' % lines[1])
+			print 'WARNING: HTTP ERROR', lines[1]
 	else:
-		log.error('HTTP ERROR')
+		print 'WARNING: HTTP ERROR'
 
 	header.close()
 	data.close()
@@ -184,19 +205,18 @@ def WriteArticleBody(eventId, url, date):
 	try:
 		c.perform()
 	except:
-		log.warning("curl error: %d %s retry once" % (eventId, url))
+		print "WARNING: curl error:", eventId, url, "retry once"
 		c.perform()
 	c.reset()
-	lines = header.getvalue().split()
+	lines = header.getvalue().split('\r\n')
 	# 200 OK
 	if lines.count <= 1:
-		log.error("HTTP ERROR")
+		print 'WARNING: HTTP ERROR'
 		return
-	if lines[1] != '200':
-		if lines[1] == '404':
-			log.info("HTTP 404 ERROR the link was broken. Just skip this page.")
-		else:
-			log.error("HTTP %s ERROR" % lines[1])
+	try:
+		lines.index('HTTP/1.1 200 OK')
+	except:
+		print 'WARNING: HTTP ERROR might be missing web page'
 		return
 
 	# parsing data and get the body paragraph
@@ -207,7 +227,7 @@ def WriteArticleBody(eventId, url, date):
 	parser.ResetParser()
 
 	if len(paragraphs) == 0:
-		log.info("empty page: %d, %s" % (eventId, url))
+		print "WARNING: empty page:", eventId, url
 		f = open("error.txt", 'w+')
 		f.write(url)
 		f.write(data.getvalue())
@@ -216,41 +236,45 @@ def WriteArticleBody(eventId, url, date):
 	# open file and write down
 	fileName = str(eventId) + '_' + newsProvider + '_' + date + '_' + title + '.txt'
 	f = open(str(eventId) + '/' + fileName, 'wb')
-	log.debug("Writing : %s" % fileName)
+	print "- Writing : %s" % fileName
 	for paragraph in paragraphs:
 		f.write(paragraph.encode('UTF-8', 'ignore'))
 	f.close()
 
 def run(eventId, keyWord, beginDate, period=180):
-	log.debug("Run NYT with %d %s %s %d" % (eventId, keyWord, beginDate, period))
-	log.debug("Getting the cookie from NYT")
+	print "- Run CT with", eventId, keyWord, beginDate, period
+	print "- Getting the cookie from CT"
 	c = pycurl.Curl()
+	cookie = GetCookie()
 	if not GetCookie():
-		log.error("Failed to get cookie from NYT")
+		print("ERROR: Failed to get cookie from NYT")
 		c.close()
 		return
-	log.debug("Searching with %s from %s for %d" % (keyWord, beginDate, period))
+	print "- Searching with", keyWord, "from" , beginDate, "for", period, "days..."
+
+	return
+
 	articleURLs = []
 	page = 0
 	while True:
 		pageArticleUrls = Search(keyWord, beginDate, period, page)
-		log.debug("page %d" % page)
+		print '  page', page
 		# If returned None it means there was no result anymore.
 		if not pageArticleUrls:
 			break
 		articleURLs = articleURLs + pageArticleUrls
 		page = page + 1
-	log.debug("Found %d articles" % len(articleURLs))
+	print "- Found %d articles" % len(articleURLs)
 	# Make output folder
 	try:
 		os.mkdir(str(eventId))
 	except:
 		pass
-	log.debug("Getting the article bodies and write to files")
+	print "- Getting the article bodies and write to files"
 	for url in articleURLs:
-		log.debug("Getting article from %s" % url[0])
+		print "- Getting article from", url[0]
 		WriteArticleBody(eventId, url[0], url[1])
-	log.debug("Finished NYT %d %s %s %d" % (eventId, keyWord, beginDate, period))
+	print "- Finished NYT", eventId, keyWord, beginDate, period
 	c.close()
 
 if __name__ == "__main__":
