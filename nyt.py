@@ -55,7 +55,9 @@ class NYTParser(HTMLParser):
 		else:
 			if self.nytHeadline:
 				self.title = re.sub('NYTimes\.com', '', data)
+				self.title = re.sub(' ', '_', self.title)
 				self.title = re.sub('\W', '', self.title)
+				self.title = re.sub('_', '-', self.title)
 
 	def GetTitle(self):
 		return self.title

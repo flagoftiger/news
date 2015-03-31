@@ -38,5 +38,6 @@ searchData = GetSearchData(args.file)
 
 # Run!
 for event in searchData:
-	nyt.run(event[0], event[1], event[2])	
+	nyt.run(event[0], event[1], event[2])
+	ct.run(event[0])
 
